@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import json
 import io
+from streamlit_plotly_events import plotly_events
 
 # Import local modules
 from atlas_data import atlas, atlas_labels
@@ -20,6 +21,8 @@ st.title('Brain Analysis with Annotations and Time Series Visualization')
 # Initialize session state for annotations
 if 'annotations' not in st.session_state:
     st.session_state.annotations = []
+if 'annotations_3d' not in st.session_state:
+    st.session_state.annotations_3d = {}
 
 uploaded_file = st.file_uploader("Choose a NII file", type=["nii", "gz"])
 
@@ -141,8 +144,35 @@ if uploaded_file:
 
     with st.expander("3D View"):
         if segmentation_applied_3d and labels_img_3d is not None:
-            fig_3d = plot_3d_brain(data, labels_img_3d, atlas_labels)
-            st.plotly_chart(fig_3d, use_container_width=True)
+            # Add annotation input fields
+            with st.sidebar:
+                st.write("### 3D Annotations")
+                annotation_text = st.text_input("Enter annotation text (click point after)", key="3d_annotation_text")
+                
+                # Display existing 3D annotations
+                st.write("### Existing 3D Annotations")
+                for coord, text in st.session_state.annotations_3d.items():
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        st.write(f"({coord[0]}, {coord[1]}, {coord[2]}): {text}")
+                    with col2:
+                        if st.button("Delete", key=f"delete_3d_{coord}"):
+                            del st.session_state.annotations_3d[coord]
+                            st.experimental_rerun()
+            
+            # Create the 3D plot with annotations
+            fig_3d = plot_3d_brain(data, labels_img_3d, atlas_labels, st.session_state.annotations_3d)
+            
+            # Handle click events using Streamlit's callback
+            clicked = plotly_events(fig_3d, click_event=True)
+            if clicked:
+                point = clicked[0]
+                if 'customdata' in point:
+                    coord = tuple(map(int, point['customdata']))
+                    if st.session_state.annotation_text:
+                        st.session_state.annotations_3d[coord] = st.session_state.annotation_text
+                        st.session_state.annotation_text = ""  # Clear the input
+                        st.experimental_rerun()
 
     # If segmentation was applied, show region stats
     if segmentation_applied_3d and labels_img_3d is not None:
@@ -252,4 +282,3 @@ if uploaded_file:
                             st.session_state.generate_test_pdf = False
             else:
                 st.warning("The uploaded NIfTI file does not appear to have a time dimension (4D).")
-
