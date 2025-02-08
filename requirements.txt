@@ -1,0 +1,11 @@
+streamlit
+nibabel
+numpy
+matplotlib
+plotly
+nilearn
+pandas
+statsmodels
+reportlab
+kaleido
+streamlit-plotly-events
