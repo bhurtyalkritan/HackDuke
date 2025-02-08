@@ -2,14 +2,52 @@
 
 import nibabel as nib
 import numpy as np
+import pandas as pd
 from nilearn import image as nli
 from nilearn.masking import compute_brain_mask
+import os
 
-def load_nii_file(uploaded_file):
-    """Load a NIfTI file from a file-like object."""
+# Default file paths
+DEFAULT_NII_PATH = "data/IIT_TDI_sum.nii"
+DEFAULT_TIMESERIES_PATH = "data/time_series.csv"
+
+def load_nii_file(uploaded_file=None):
+    """
+    Load a NIfTI file from either a file-like object or use the default file.
+    
+    Args:
+        uploaded_file: Optional file-like object containing NIfTI data
+        
+    Returns:
+        nibabel.Nifti1Image: Loaded NIfTI image
+    """
+    if uploaded_file is None:
+        if os.path.exists(DEFAULT_NII_PATH):
+            return nib.load(DEFAULT_NII_PATH)
+        else:
+            raise FileNotFoundError(f"Default NIfTI file not found at {DEFAULT_NII_PATH}")
+    
     file_holder = nib.FileHolder(fileobj=uploaded_file)
     nii = nib.Nifti1Image.from_file_map({'header': file_holder, 'image': file_holder})
     return nii
+
+def load_time_series(uploaded_csv=None):
+    """
+    Load time series data from either a file-like object or use the default file.
+    
+    Args:
+        uploaded_csv: Optional file-like object containing CSV data
+        
+    Returns:
+        pandas.DataFrame: Loaded time series data
+    """
+    if uploaded_csv is None:
+        if os.path.exists(DEFAULT_TIMESERIES_PATH):
+            return pd.read_csv(DEFAULT_TIMESERIES_PATH)
+        else:
+            raise FileNotFoundError(f"Default time series file not found at {DEFAULT_TIMESERIES_PATH}")
+    
+    return pd.read_csv(uploaded_csv)
 
 def skull_strip(nii_data):
     """Apply a brain mask to remove skull and non-brain tissues."""
