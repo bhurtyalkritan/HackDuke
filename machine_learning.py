@@ -3,6 +3,8 @@ def run_fmri_decoding():
     import pandas as pd
     from nilearn.image import mean_img, index_img
     from sklearn.model_selection import KFold, LeaveOneGroupOut
+    from nilearn.decoding import Decoder
+    from sklearn.model_selection import train_test_split
     from pathlib import Path
 
     haxby_dataset = datasets.fetch_haxby()
@@ -84,4 +86,66 @@ def run_fmri_decoding():
         standardize="zscore_sample",
     )
     dummy_decoder.fit(fmri_niimgs, conditions, groups=run_label)
+
+def individual_statistics(data, labels_img, region_label, atlas_labels):
+    """Compute stats for a single region (region_label)."""
+    region_data = data[labels_img.get_fdata() == region_label]
+    mean_intensity = np.mean(region_data)
+    volume = np.count_nonzero(region_data)
+    return {
+        'Region': atlas_labels[int(region_label)],
+        'Mean Intensity': mean_intensity,
+        'Volume': volume
+    }
+
+def classify_schizophrenia(fmri_data, labels=None, model=None, test_size=0.2, random_state=42):
+    """
+    Classify schizophrenia patients using fMRI data.
     
+    Parameters:
+    -----------
+    fmri_data : list of Nifti1Image
+        List of fMRI images for classification
+    labels : array-like, optional
+        Corresponding labels (1 for schizophrenia, 0 for control)
+        Required for training mode
+    model : Decoder, optional
+        Pre-trained Decoder model for prediction
+    test_size : float, default=0.2
+        Proportion of data to use for testing (training mode only)
+    random_state : int, default=42
+        Random seed for reproducibility
+        
+    Returns:
+    --------
+    If in training mode:
+        - trained_model : Decoder
+        - test_predictions : array
+        - test_scores : array
+    If in prediction mode:
+        - predictions : array
+    """
+    if model is None and labels is None:
+        raise ValueError("Either a pre-trained model or labels must be provided")
+        
+    if model is None:
+        # Training mode
+        X_train, X_test, y_train, y_test = train_test_split(
+            fmri_data, labels, test_size=test_size, random_state=random_state
+        )
+        
+        decoder = Decoder(
+            estimator='svc',
+            mask_strategy='whole-brain-template',
+            standardize=True,
+            cv=5
+        )
+        
+        decoder.fit(X_train, y_train)
+        predictions = decoder.predict(X_test)
+        scores = decoder.decision_function(X_test)
+        
+        return decoder, predictions, scores
+    else:
+        # Prediction mode
+        return model.predict(fmri_data)
