@@ -123,7 +123,7 @@ if True:
             with col4:
                 if st.button("Delete", key=f"delete_{i}"):
                     st.session_state.annotations.pop(i)
-                    st.experimental_rerun()
+                    st.rerun()
 
     with st.sidebar.expander("3D Scan"):
         segmentation_applied_3d = st.checkbox("Apply Segmentation for 3D")
