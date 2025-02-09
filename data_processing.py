@@ -1,4 +1,3 @@
-# data_processing.py
 
 import nibabel as nib
 import numpy as np
@@ -7,7 +6,6 @@ from nilearn import image as nli
 from nilearn.masking import compute_brain_mask
 import os
 
-# Default file paths
 DEFAULT_NII_PATH = "data/IIT_TDI_sum.nii"
 DEFAULT_TIMESERIES_PATH = "data/time_series.csv"
 

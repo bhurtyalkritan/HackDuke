@@ -1,4 +1,3 @@
-# plotting.py
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -62,7 +61,6 @@ def plot_3d_brain(data, labels_img, atlas_labels, annotations=None):
     intensities = data[x, y, z]
     regions = labels_img.get_fdata()[x, y, z]
 
-    # Create hover texts including any existing annotations
     hover_texts = []
     for i, (region, intensity) in enumerate(zip(regions, intensities)):
         point_coord = (int(x[i]), int(y[i]), int(z[i]))
@@ -84,11 +82,10 @@ def plot_3d_brain(data, labels_img, atlas_labels, annotations=None):
         ),
         text=hover_texts,
         hoverinfo='text',
-        customdata=list(zip(x, y, z)),  # Store coordinates for click events
+        customdata=list(zip(x, y, z)),  
         hovertemplate="%{text}<extra></extra>"
     )])
 
-    # Add a button to toggle annotation mode
     fig.update_layout(
         scene=dict(
             xaxis=dict(title='Left-Right'),
@@ -123,7 +120,6 @@ def annotate_slice(data, slice_number, axis=0, annotations=[]):
     ax.set_xlabel('X axis')
     ax.set_ylabel('Y axis')
 
-    # Overlay annotations
     for annotation in annotations:
         ax.text(annotation['x'], annotation['y'], annotation['text'],
                 color='red', fontsize=12, ha='left')

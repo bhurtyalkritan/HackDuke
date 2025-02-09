@@ -7,7 +7,6 @@ import json
 import io
 import statsmodels.api as sm
 
-# Import local modules
 from atlas_data import atlas, atlas_labels
 from data_processing import (load_nii_file, skull_strip, apply_segmentation,
                              calculate_region_statistics, individual_statistics)
@@ -16,23 +15,19 @@ from plotting import (plot_slice, plot_highlighted_slice, plot_3d_brain,
 from stats_analysis import run_glm
 from report_generation import generate_pdf_report, test_pdf, generate_pdf_visit
 
-st.title('Brain Analysis with Annotations and Time Series Visualization')
+st.title('Neuro X')
 
-# Initialize session state for annotations
 if 'annotations' not in st.session_state:
     st.session_state.annotations = []
 
 uploaded_file = st.sidebar.file_uploader("Choose a NII file", type=["nii", "gz"])
 
-# Use default NII if no upload
 if uploaded_file:
     nii_data = load_nii_file(uploaded_file)
 else:
     nii_data = load_nii_file('data/IIT_TDI_sum.nii')
 
 visit=False
-#visit check
-# Always process data since we have default
 if True:
     data = nii_data.get_fdata()
 
@@ -57,7 +52,6 @@ if True:
             segmentation_applied = st.checkbox("Apply Segmentation for Highlighting")
             if segmentation_applied:
                 labels_img = apply_segmentation(nii_data, atlas)
-                # region_index is a tuple of (int, label_name)
                 region_index = st.selectbox(
                     "Select Region to Highlight",
                     options=[(i, atlas_labels[i]) for i in np.unique(labels_img.get_fdata().astype(int)) if i != 0]
@@ -72,7 +66,6 @@ if True:
             fig = annotate_slice(data, slice_num, axis_map[axis], st.session_state.annotations)
             st.pyplot(fig)
 
-        # Export Annotated Slice
         buffer_fig = io.BytesIO()
         fig.savefig(buffer_fig, format="png")
         buffer_fig.seek(0)
@@ -84,7 +77,6 @@ if True:
             mime="image/png"
         )
 
-        # Export Annotations
         annotations_json = json.dumps(st.session_state.annotations)
         st.download_button(
             label="Export Annotations",
@@ -93,7 +85,6 @@ if True:
             mime="application/json"
         )
 
-        # Import Annotations
         uploaded_annotations = st.sidebar.file_uploader("Import Annotations", type=["json"])
         if uploaded_annotations:
             st.session_state.annotations = json.loads(uploaded_annotations.getvalue())
@@ -108,7 +99,6 @@ if True:
             st.session_state.annotations.append({'x': x, 'y': y, 'text': text})
             st.experimental_rerun()
 
-        # Display existing annotations with edit/delete options
         for i, annotation in enumerate(st.session_state.annotations):
             col1, col2, col3, col4 = st.columns([1, 1, 2, 1])
             with col1:
@@ -144,20 +134,18 @@ if True:
 
     uploaded_csv = st.sidebar.file_uploader("Upload time-series data (CSV) for GLM Analysis", type=["csv"])
     
-    # Use default CSV if no upload
     if uploaded_csv:
         time_series = pd.read_csv(uploaded_csv)
     else:
         time_series = pd.read_csv('data/time_series.csv')
         
-    time_series = sm.add_constant(time_series)  # Add constant for intercept
+    time_series = sm.add_constant(time_series) 
 
     with st.expander("3D View"):
         if segmentation_applied_3d and labels_img_3d is not None:
             fig_3d = plot_3d_brain(data, labels_img_3d, atlas_labels)
             st.plotly_chart(fig_3d, use_container_width=True)
 
-    # If segmentation was applied, show region stats
     if segmentation_applied_3d and labels_img_3d is not None:
         stats = calculate_region_statistics(data, labels_img_3d, atlas_labels)
         stats_df = pd.DataFrame(stats)
@@ -167,33 +155,26 @@ if True:
             st.plotly_chart(fig_scatter, use_container_width=True)
             st.plotly_chart(fig_pie, use_container_width=True)
 
-        # Time-series / GLM
         if uploaded_csv is not None and 'time_series' in locals():
-    # Use the CSV data for GLM analysis
                     region_index_val = region_index[0]
-                    X = time_series[['Intercept', 'Condition1', 'Condition2']]  # Predictors
-                    y = time_series['Time']  # Response variable
+                    X = time_series[['Intercept', 'Condition1', 'Condition2']]  
+                    y = time_series['Time']  
 
-                    # Run GLM
                     model = sm.GLM(y, X, family=sm.families.Gaussian())
                     results = model.fit()
 
-            # Display GLM results
                     st.write(results.summary())
 
-                    # T-test for intercept
-                    t_test = results.t_test([1, 0, 0])  # Test the intercept
+                    t_test = results.t_test([1, 0, 0])  
                     st.write("T-test results for intercept:")
                     st.write(t_test.summary_frame())
 
-                    # GLM Analysis Report
                     st.write("**GLM Analysis Report:**")
                     st.write("The General Linear Model (GLM) analysis revealed the following key results:")
                     st.write(f"- **Deviance**: {results.deviance:.4f}")
                     st.write(f"- **Pearson Chi2**: {results.pearson_chi2:.4f}")
                     st.write(f"- **Coefficients:**")
 
-                    # Create a DataFrame for coefficients
                     coef_df = pd.DataFrame({
                         "Coefficient": results.params,
                         "Std Error": results.bse,
@@ -202,7 +183,6 @@ if True:
                     })
                     st.table(coef_df)
 
-                    # Check significance of the intercept
                     if t_test.tvalue[0] > 1.96 or t_test.tvalue[0] < -1.96:
                         st.write(
                             "The t-test for the intercept is statistically significant at the 0.05 level, "
@@ -214,22 +194,18 @@ if True:
                             "suggesting that the relationship may not be significant."
                         )
 
-                    # Plot time-series data
                     fig_time_series = plot_time_series(time_series, time_series['Condition1'], region_label, atlas_labels)   
                     st.plotly_chart(fig_time_series, use_container_width=True)
-                    # Create some 2D slices for the PDF (just examples)
                     fig_axial = plot_slice(data, data.shape[2]//2, axis=2)
                     fig_coronal = plot_slice(data, data.shape[1]//2, axis=1)
                     fig_sagittal = plot_slice(data, data.shape[0]//2, axis=0)
 
-                    # Button to trigger PDF generation
                     if st.button("Generate PDF Report"):
                         visit=False
                         st.session_state.generate_pdf = True
                     if st.button("Generate PDF Visit Report"):
                         visit=True
                         st.session_state.generate_pdf = True
-                    # Check if the PDF should be generated
                     if 'generate_pdf' in st.session_state and st.session_state.generate_pdf:
                         with st.spinner("Generating PDF report..."):
 
@@ -266,11 +242,9 @@ if True:
                             )
                             st.session_state.generate_pdf = False
 
-                    # Button to trigger test PDF generation
                     if st.button("Generate Test PDF"):
                         st.session_state.generate_test_pdf = True
 
-                    # Check if the test PDF should be generated
                     if 'generate_test_pdf' in st.session_state and st.session_state.generate_test_pdf:
                         with st.spinner("Generating Test PDF report..."):
                             test_pdf_output = test_pdf()
