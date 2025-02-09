@@ -224,7 +224,7 @@ if True:
 
                     # Button to trigger PDF generation
                     if st.button("Generate PDF Report"):
-                        visit=True
+                        visit=False
                         st.session_state.generate_pdf = True
                     if st.button("Generate PDF Visit Report"):
                         visit=True
@@ -246,7 +246,7 @@ if True:
                                 results, 
                                 region_index)
                             else:
-                            pdf_output = generate_pdf_report(
+                                pdf_output = generate_pdf_report(
                                 fig_scatter, 
                                 fig_pie, 
                                 fig_time_series,
