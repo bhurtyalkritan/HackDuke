@@ -29,6 +29,7 @@ def generate_pdf_visit(fig_scatter,
                             topMargin=72, bottomMargin=18)
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(name='Caption', fontSize=10, leading=12, spaceAfter=6))
+
     elements = []
 
     def add_image(fig, elements, caption, styles, is_plotly=False):
@@ -60,16 +61,16 @@ def generate_pdf_visit(fig_scatter,
     elements.append(Spacer(1, 24))
 
     # Abstract
-    elements.append(Paragraph("Abstract", styles['Heading1']))
+    elements.append(Paragraph("Preface", styles['Heading1']))
     abstract_text = (
         "This report provides an in-depth analysis of brain imaging data using a Generalized "
         "Linear Model (GLM). The GLM approach allows for flexible modeling of various types of "
         "response variables, including count data, binary data, and continuous positive values. "
         "The aim is to explore brain imaging data using advancedstatistical techniques to identify patterns  "
-        "and significant changes in brain activity over time. This approach allows for a better analysis"
-        "of one's brain and helps in visualization for both the patient and the Doctors. Attached with this report"
-        "will be a file containing your brain scans. Ask your Neurologist for help in observing your MRI data,"
-        "and to understand these results" 
+        " and significant changes in brain activity over time. This approach allows for a better analysis"
+        " of one's brain and helps in visualization for both the patient and the Doctors. Attached with this report"
+        " will be a file containing your brain scans. Ask your Neurologist for help in observing your MRI data,"
+        " and to understand these results." 
     )
     elements.append(Paragraph(abstract_text, styles['Normal']))
     elements.append(Spacer(1, 12))
@@ -78,9 +79,9 @@ def generate_pdf_visit(fig_scatter,
     elements.append(Paragraph("Clinical History", styles['Heading1']))
     intro_text = (
         "The patient has had a long history of sudden migraines and occasional seizures."
-        "Patient has no prior history of any head trauma, and has no history of neurological disorders "
-        "Patient's grandfather is diagnosed with epilepsy, but has no other family history of neurological disorders "
-        "MRI scan requested to rule out any neurological abnormalities."
+        " Patient has no prior history of any head trauma, and has no history of neurological disorders."
+        " Patient's grandfather is diagnosed with epilepsy, but has no other family history of neurological disorders."
+        " MRI scan requested to rule out any neurological abnormalities."
     )
     elements.append(Paragraph(intro_text, styles['Normal']))
     elements.append(Spacer(1, 12))
@@ -88,10 +89,10 @@ def generate_pdf_visit(fig_scatter,
     # Methods
     elements.append(Paragraph("Methods", styles['Heading1']))
     methods_text = (
-        "Proceeding the MRI scan, the results were taken and converted into an NII file for"
-        "collection and processing. NiBabel was utilized for reading and writing neuroimaging files, "
-        "and Nilearn was used for processing and analyzing the data. The data was consequently paired"
-        "with GLM Time Series Analysis for results."
+        "Proceeding the MRI scan, the results were taken and converted into an NII file for "
+        " collection and processing. NiBabel was utilized for reading and writing neuroimaging files,"
+        " and Nilearn was used for processing and analyzing the data. The data was consequently paired"
+        " with GLM Time Series Analysis for results."
     )
     elements.append(Paragraph(methods_text, styles['Normal']))
     elements.append(Spacer(1, 12))
@@ -166,12 +167,12 @@ def generate_pdf_visit(fig_scatter,
     elements.append(Spacer(1, 12))
 
     libraries = [
-        "- **Nilearn**: Simplifies scikit-learn in the context of neuroimaging.",
-        "- **NiBabel**: Provides read and write access to various neuroimaging file formats.",
-        "- **Streamlit**: Used to create an interactive web application interface.",
-        "- **Matplotlib and Plotly**: Used for generating visualizations.",
-        "- **Statsmodels**: Used for statistical analysis.",
-        "- **ReportLab**: Used for generating PDF reports."
+        "- Nilearn: Simplifies scikit-learn in the context of neuroimaging.",
+        "- NiBabel: Provides read and write access to various neuroimaging file formats.",
+        "- Streamlit: Used to create an interactive web application interface.",
+        "- Matplotlib and Plotly: Used for generating visualizations.",
+        "- Statsmodels: Used for statistical analysis.",
+        "- ReportLab: Used for generating PDF reports."
     ]
     for library in libraries:
         elements.append(Paragraph(library, styles['Normal']))
@@ -203,8 +204,23 @@ def generate_pdf_report(fig_scatter,
                             rightMargin=72, leftMargin=72,
                             topMargin=72, bottomMargin=18)
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name='Caption', fontSize=10, leading=12, spaceAfter=6))
+    styles.add(ParagraphStyle(name='Caption', fontName='Times-Bold', fontSize=10, leading=12, spaceAfter=6))
+
+    styles['Normal'].fontName = 'Times-Roman'
+    styles['Normal'].fontSize = 12
+    styles['Normal'].leading = 14
+
+    styles['Title'].fontName = 'Times-Bold'
+    styles['Title'].fontSize = 18
+    styles['Title'].leading = 22
+    styles['Title'].bold = True
+
+    styles['Heading1'].fontName = 'Times-Bold'
+    styles['Heading1'].fontSize = 14
+    styles['Heading1'].leading = 18
+    styles['Title'].bold = True
     elements = []
+    
 
     def add_image(fig, elements, caption, styles, is_plotly=False):
         """
@@ -354,12 +370,12 @@ def generate_pdf_report(fig_scatter,
     elements.append(Spacer(1, 12))
 
     libraries = [
-        "- **Nilearn**: Simplifies scikit-learn in the context of neuroimaging.",
-        "- **NiBabel**: Provides read and write access to various neuroimaging file formats.",
-        "- **Streamlit**: Used to create an interactive web application interface.",
-        "- **Matplotlib and Plotly**: Used for generating visualizations.",
-        "- **Statsmodels**: Used for statistical analysis.",
-        "- **ReportLab**: Used for generating PDF reports."
+        "- Nilearn: Simplifies scikit-learn in the context of neuroimaging.",
+        "- NiBabel: Provides read and write access to various neuroimaging file formats.",
+        "- Streamlit: Used to create an interactive web application interface.",
+        "- Matplotlib and Plotly: Used for generating visualizations.",
+        "- Statsmodels: Used for statistical analysis.",
+        "- ReportLab: Used for generating PDF reports."
     ]
     for library in libraries:
         elements.append(Paragraph(library, styles['Normal']))

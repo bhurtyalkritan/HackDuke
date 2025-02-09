@@ -244,19 +244,19 @@ if True:
                                 coef_df, 
                                 results, 
                                 region_index)
-
-                            pdf_output = generate_pdf_report(
-                                fig_scatter, 
-                                fig_pie, 
-                                fig_time_series,
-                                fig_3d, 
-                                fig_axial, 
-                                fig_coronal, 
-                                fig_sagittal,
-                                coef_df, 
-                                results, 
-                                region_index
-                            )
+                            else:
+                                pdf_output = generate_pdf_report(
+                                    fig_scatter, 
+                                    fig_pie, 
+                                    fig_time_series,
+                                    fig_3d, 
+                                    fig_axial, 
+                                    fig_coronal, 
+                                    fig_sagittal,
+                                    coef_df, 
+                                    results, 
+                                    region_index
+                                )
                             st.download_button(
                                 label="Download Report",
                                 data=pdf_output,
