@@ -88,7 +88,7 @@ if True:
         uploaded_annotations = st.sidebar.file_uploader("Import Annotations", type=["json"])
         if uploaded_annotations:
             st.session_state.annotations = json.loads(uploaded_annotations.getvalue())
-            st.experimental_rerun()
+            st.rerun()
 
         st.write("## Annotations")
         x = st.number_input("X Coordinate", min_value=0, max_value=data.shape[0] - 1, value=0)
@@ -97,7 +97,7 @@ if True:
 
         if st.button("Add Annotation"):
             st.session_state.annotations.append({'x': x, 'y': y, 'text': text})
-            st.experimental_rerun()
+            st.rerun()
 
         for i, annotation in enumerate(st.session_state.annotations):
             col1, col2, col3, col4 = st.columns([1, 1, 2, 1])
