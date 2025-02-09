@@ -14,7 +14,7 @@ from data_processing import (load_nii_file, skull_strip, apply_segmentation,
 from plotting import (plot_slice, plot_highlighted_slice, plot_3d_brain,
                       annotate_slice, generate_charts, plot_time_series)
 from stats_analysis import run_glm
-from report_generation import generate_pdf_report, test_pdf
+from report_generation import generate_pdf_report, test_pdf, generate_pdf_visit
 
 st.title('Brain Analysis with Annotations and Time Series Visualization')
 
@@ -30,6 +30,8 @@ if uploaded_file:
 else:
     nii_data = load_nii_file('data/IIT_TDI_sum.nii')
 
+visit=False
+#visit check
 # Always process data since we have default
 if True:
     data = nii_data.get_fdata()
@@ -167,29 +169,31 @@ if True:
 
         # Time-series / GLM
         if uploaded_csv is not None and 'time_series' in locals():
-            if len(data.shape) == 4:
-                # We have a 4D volume (time dimension)
-                with st.expander("GLM Results"):
+    # Use the CSV data for GLM analysis
                     region_index_val = region_index[0]
-                    results, t_test, mean_intensity_over_time, summary_dict = run_glm(
-                        region_data=data,
-                        labels_img=labels_img_3d,
-                        region_index=region_index_val,
-                        time_series=time_series,
-                        atlas_labels=atlas_labels
-                    )
+                    X = time_series[['Intercept', 'Condition1', 'Condition2']]  # Predictors
+                    y = time_series['Time']  # Response variable
+
+                    # Run GLM
+                    model = sm.GLM(y, X, family=sm.families.Gaussian())
+                    results = model.fit()
+
+            # Display GLM results
                     st.write(results.summary())
 
+                    # T-test for intercept
+                    t_test = results.t_test([1, 0, 0])  # Test the intercept
                     st.write("T-test results for intercept:")
                     st.write(t_test.summary_frame())
 
+                    # GLM Analysis Report
                     st.write("**GLM Analysis Report:**")
-                    st.write(f"The General Linear Model (GLM) analysis for the selected region '{atlas_labels[region_index_val]}' "
-                             f"revealed the following key results:")
-                    st.write(f"- **Deviance**: {summary_dict['deviance']:.4f}")
-                    st.write(f"- **Pearson Chi2**: {summary_dict['pearson_chi2']:.4f}")
+                    st.write("The General Linear Model (GLM) analysis revealed the following key results:")
+                    st.write(f"- **Deviance**: {results.deviance:.4f}")
+                    st.write(f"- **Pearson Chi2**: {results.pearson_chi2:.4f}")
                     st.write(f"- **Coefficients:**")
 
+                    # Create a DataFrame for coefficients
                     coef_df = pd.DataFrame({
                         "Coefficient": results.params,
                         "Std Error": results.bse,
@@ -198,10 +202,11 @@ if True:
                     })
                     st.table(coef_df)
 
+                    # Check significance of the intercept
                     if t_test.tvalue[0] > 1.96 or t_test.tvalue[0] < -1.96:
                         st.write(
                             "The t-test for the intercept is statistically significant at the 0.05 level, "
-                            "indicating a significant relationship between the intercept and brain activity in the selected region."
+                            "indicating a significant relationship between the intercept and the response variable."
                         )
                     else:
                         st.write(
@@ -210,21 +215,36 @@ if True:
                         )
 
                     # Plot time-series data
-                    fig_time_series = plot_time_series(time_series, mean_intensity_over_time, region_index_val, atlas_labels)
+                    fig_time_series = plot_time_series(time_series, time_series['Condition1'], region_label, atlas_labels)   
                     st.plotly_chart(fig_time_series, use_container_width=True)
-
                     # Create some 2D slices for the PDF (just examples)
-                    fig_axial = plot_slice(data[..., data.shape[-1]//2], data.shape[2]//2, axis=2)
-                    fig_coronal = plot_slice(data[..., data.shape[-1]//2], data.shape[1]//2, axis=1)
-                    fig_sagittal = plot_slice(data[..., data.shape[-1]//2], data.shape[0]//2, axis=0)
+                    fig_axial = plot_slice(data, data.shape[2]//2, axis=2)
+                    fig_coronal = plot_slice(data, data.shape[1]//2, axis=1)
+                    fig_sagittal = plot_slice(data, data.shape[0]//2, axis=0)
 
                     # Button to trigger PDF generation
                     if st.button("Generate PDF Report"):
                         st.session_state.generate_pdf = True
-
+                    if st.button("Generate PDF Visit Report"):
+                        visit=True
+                        st.session_state.generate_pdf = True
                     # Check if the PDF should be generated
                     if 'generate_pdf' in st.session_state and st.session_state.generate_pdf:
                         with st.spinner("Generating PDF report..."):
+
+                            if visit==True:
+                                pdf_output = generate_pdf_visit(
+                                fig_scatter, 
+                                fig_pie, 
+                                fig_time_series,
+                                fig_3d, 
+                                fig_axial, 
+                                fig_coronal, 
+                                fig_sagittal,
+                                coef_df, 
+                                results, 
+                                region_index)
+
                             pdf_output = generate_pdf_report(
                                 fig_scatter, 
                                 fig_pie, 
@@ -260,5 +280,3 @@ if True:
                                 mime="application/pdf"
                             )
                             st.session_state.generate_test_pdf = False
-            else:
-                st.warning("The uploaded NIfTI file does not appear to have a time dimension (4D).")
